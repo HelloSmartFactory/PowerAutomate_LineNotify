@@ -1,0 +1,151 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logicAppName": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the logic app."
+            }
+        },
+        "logicAppLocation": {
+            "defaultValue": "[resourceGroup().location]",
+            "allowedValues": [
+                "eastasia",
+                "southeastasia",
+                "centralus",
+                "eastus",
+                "eastus2",
+                "westus",
+                "northcentralus",
+                "southcentralus",
+                "northeurope",
+                "westeurope",
+                "japanwest",
+                "japaneast",
+                "brazilsouth",
+                "australiaeast",
+                "australiasoutheast",
+                "southindia",
+                "centralindia",
+                "westindia",
+                "canadacentral",
+                "canadaeast",
+                "uaecentral",
+                "westcentralus",
+                "westus2",
+                "[resourceGroup().location]"
+            ],
+            "type": "String",
+            "metadata": {
+                "description": "Location of the logic app."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('logicAppName')]",
+            "location": "[parameters('logicAppLocation')]",
+            "properties": {
+                "state": "Disabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$authentication": {
+                            "defaultValue": {},
+                            "type": "SecureObject"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Button",
+                            "inputs": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "text": {
+                                            "title": "通知内容",
+                                            "type": "string",
+                                            "x-ms-dynamically-added": true,
+                                            "description": "Lineに通知する内容を書いてください。",
+                                            "x-ms-content-hint": "TEXT"
+                                        }
+                                    },
+                                    "required": [
+                                        "text"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "HTTP": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "uri": "https://notify-api.line.me/api/notify",
+                                "headers": {
+                                    "Content-Type": "application/x-www-form-urlencoded",
+                                    "Authorization": "Bearer @{variables('Line Notify token')}"
+                                },
+                                "body": "message=@{triggerBody()['text']}"
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Line Notify token",
+                                        "type": "string",
+                                        "value": "ここにトークンを貼り付けてください。"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "parameters": {},
+                "runtimeConfiguration": {
+                    "lifetime": {
+                        "unit": "Day",
+                        "count": 30
+                    },
+                    "collections": {
+                        "maximumItemCount": 100000
+                    },
+                    "performanceProfile": {
+                        "throttles": {
+                            "mode": "Medium"
+                        }
+                    },
+                    "retryPolicy": {
+                        "type": "Exponential",
+                        "interval": "PT5M",
+                        "count": 2,
+                        "minimumInterval": "PT5M",
+                        "maximumInterval": "PT1H"
+                    },
+                    "usageConfiguration": {
+                        "name": "USER-15843C9035DB451099359D34A12625E9"
+                    }
+                },
+                "integrationAccount": {
+                    "name": "0337870d6e3e4b30b64e4aa1e3d9cafa-japaneast",
+                    "id": "subscriptions/c6c6344b-0825-4478-a78d-c56f2e99ebe1/resourceGroups/0337870d6e3e4b30b64e4aa1e3d9cafa-ia/providers/Microsoft.Logic/integrationAccounts/0337870d6e3e4b30b64e4aa1e3d9cafa-japaneast",
+                    "type": "Microsoft.Logic/integrationAccounts"
+                }
+            }
+        }
+    ]
+}
