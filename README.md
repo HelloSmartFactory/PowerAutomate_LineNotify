@@ -1,0 +1,2 @@
+# PowerAutomate_LineNotify
+PowerAutomateで作成したLine通知のサンプルです。
